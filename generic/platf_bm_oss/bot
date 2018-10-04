@@ -1,0 +1,140 @@
+#!/bin/bash -e
+
+# Copyright 2018-present Open Networking Foundation
+#
+# Contributed and sponsored by Deutsche Telekom AG.
+# Originally developed as part of the D-Nets 6 P4 Service Edge project
+# in collaboration with Technische Universitaet Darmstadt.
+# Authors: Leonhard Nobach, Jeremias Blendin, Ralf Kundel
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+# http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
+# For details see the file LICENSE in the top project directory.
+
+# This script assumes all P4 bmv2 etc. build tools are in the PATH.
+# All tools should also be available in the official p4lang/p4app:latest 
+# docker container.
+
+
+export BASEDIR=`dirname $(readlink -f $0)`
+source $BASEDIR/vars
+
+
+
+# ========== auto
+
+function auto {
+  echo "======= Cleaning up.."
+  clean || exit 101
+  echo "======= Building..."
+  build || exit 102
+  echo "======= Running..."
+  run-test || exit 103
+}
+
+
+# ========== clean
+
+function clean {
+
+  rm -Rf $BASEDIR/build/
+
+}
+
+
+# ========== build
+
+function build {
+
+  SOURCE=$BASEDIR/../p4src/se.p4
+  TARGET=$BASEDIR/build/p4c
+  mkdir -p $TARGET
+  p4c-bm2-ss --p4v 14 $SOURCE --p4runtime-file $TARGET/default.p4runtime --p4runtime-format text -o $TARGET/$PROJ_NAME.json
+
+}
+
+
+# =========== run-test
+
+function run-test {
+
+  P4C_RESULT=$BASEDIR/build/p4c/$PROJ_NAME.json
+
+  echo "=== Running simple_switch..."
+  simple_switch --thrift-port 1337 $P4C_RESULT &
+
+  switch_pid=$!
+  echo "=== simple_switch started with PID $switch_pid ."
+  echo "=== Starting tests in new process..."
+  $BASEDIR/autotest
+  RESULT=$?
+  echo "=== Finished tests with return code $RESULT. Terminating switch gracefully..."
+  kill $switch_pid
+  wait $switch_pid
+  exit $RESULT
+
+}
+
+
+# =========== raw-cli
+
+function raw-cli {
+
+  P4C_RESULT=$BASEDIR/build/p4c/$PROJ_NAME.json
+
+  echo "=== Running simple_switch..."
+  simple_switch --thrift-port 1337 $P4C_RESULT &
+
+  switch_pid=$!
+  echo "=== simple_switch started with PID $switch_pid ."
+  echo "=== Starting table population in new process..."
+  $BASEDIR/runtime/test.py "simple_switch_CLI --thrift-port 1337"
+  echo "=== Starting raw CLI..."
+  simple_switch_CLI --thrift-port 1337
+  echo "=== Terminated CLI, terminating switch gracefully..."
+  kill $switch_pid
+  wait $switch_pid
+  exit 0
+
+}
+
+
+# =========== MAIN
+
+case "$1" in
+  clean)
+    clean
+    ;;
+  build)
+    build
+    ;;
+  run-test)
+    run-test
+    ;;
+  raw-cli)
+    raw-cli
+    ;;
+  auto)
+    auto
+    ;;
+  *)
+    echo "Usage: ./bot {clean,build,run-test,raw-cli,auto}"
+    exit 1
+    ;;
+esac
+
+
+
+
+
+

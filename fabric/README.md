@@ -4,7 +4,7 @@ P4 CORD Service Edge
 
 This repository contains a P4 program that implements
 a residential network access service data plane. The residential access data
-plane is desgined for the requirements of Deutsche Telekom and includes PPPoE 
+plane is designed for the requirements of Deutsche Telekom and includes PPPoE
 tunneling.
 
 The repository contains the data plane only, no control plane is included at 

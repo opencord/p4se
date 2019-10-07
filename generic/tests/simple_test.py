@@ -20,7 +20,7 @@
 #
 # For details see the file LICENSE in the top project directory.
 
-import runtime.utils.simple_subscriber
+from runtime.utils.simple_subscriber import *
 
 DEFAULT_SERVICE_ID = 1
 
@@ -65,7 +65,7 @@ class SimpleTest:
         subs = []
 
         for i in range(0, size):
-            subs.append(utils.simple_subscriber.SimpleSubscriber(self.caller, i, "TENGIG", self.stats))
+            subs.append(SimpleSubscriber(self.caller, i, "TENGIG", self.stats))
 
         for sub in subs:
             sub.createLine(self.accessPort1, self.accessOuterLabel1)

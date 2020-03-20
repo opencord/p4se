@@ -183,7 +183,7 @@ table t_line_map {
  max_size : SUBSC_CAPACITY;
 }
 
-action a_line_map_pass(line_id, lawf_int) {
+action a_line_map_pass(line_id) {
  modify_field(ingress_md.line_id, line_id);
 #ifdef DEBUG_COUNTERS
  count(ctr_debug, 2);
@@ -239,7 +239,7 @@ table t_antispoof_mac {
  max_size : SUBSC_CAPACITY;
 }
 
-action a_antispoof_mac_pass(subsc_id, lawf_int, ctr_bucket) {
+action a_antispoof_mac_pass(subsc_id, ctr_bucket) {
  modify_field(ingress_md.subsc_id, subsc_id);
  count(ctr_us_subsc, ctr_bucket);
 #ifdef DEBUG_COUNTERS
@@ -477,7 +477,7 @@ table t_ds_routev4 {
 }
 
 action a_ds_route_pushstack(mpls0_label, mpls1_label, subsc_vid, service_vid, 
-	pppoe_session_id, out_port, inner_cpe_mac, lawf_int, ctr_bucket) {
+	pppoe_session_id, out_port, inner_cpe_mac, ctr_bucket) {
 
  modify_field(mpls0.label, mpls0_label);
  modify_field(mpls1.label, mpls1_label);
